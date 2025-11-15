@@ -23,14 +23,8 @@
 
 ## Updating Application
 
-   The docker container is linked to the local source code. To update the application, simply rebuild the project with:
+   The docker container is linked to the `dist` folder. To update the application, simply rebuild the project and restart the container:
 
    ```bash
-   pnpm build
-   ```
-
-   If you need to update the dependencies, you will need to rebuild the app service as well:
-
-   ```bash
-   docker container restart astro
+   pnpm build && docker container restart astro
    ```

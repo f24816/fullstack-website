@@ -1,0 +1,55 @@
+services:
+    pocketbase:
+        image: alpine:latest
+        container_name: pocketbase
+        ports:
+            - "8090:8090"
+        volumes:
+            - pocketbase_data:/pb_data
+            - pocketbase_bin:/pb
+            - ./scripts:/scripts
+        working_dir: /pb
+        environment:
+            - POCKETBASE_ADMIN_EMAIL=${POCKETBASE_ADMIN_EMAIL}
+            - POCKETBASE_ADMIN_PASSWORD=${POCKETBASE_ADMIN_PASSWORD}
+            - POCKETBASE_PORT=8090
+        command: sh /scripts/init-pocketbase.sh
+        restart: unless-stopped
+        networks:
+            - app-network
+
+    astro: # just name your service, can be anything.
+        # image: your-image-name:latest # <- this would be the tag for image
+        # Build the image using the Dockerfile in the current directory (.)
+        build: .
+        # Name the container for easier reference (optional)
+        container_name: astro
+        # Map port 4321 on your host to port 4321 in the container
+        ports:
+            - "80:4321"
+        # Mount your local source code directory into the container's /app directory
+        # This is the key part for live development
+        volumes:
+            - .:/app # Mount current directory (where compose file is) to /app
+
+            # Now the host version of app folder overrides everything in
+            # container, but we still want the app/node_modules folder to come
+            # from the container and not the host
+            # To fix it we need to add one more mapping that would overlay on the
+            # previous mapping. Allowing app/node_modules contain files from the
+            # container and not to the host.
+            - node_modules:/app/node_modules
+            # notice the path of node_modules, it doesn't start with / or .
+            # meaning it "doesn't exist" in host filesystem, its a named volume.
+        networks:
+            - app-network
+volumes:
+    # Docker will create, own and manage this volume
+    # for the mapping trick above to work
+    node_modules:
+    pocketbase_data:
+    pocketbase_bin:
+
+networks:
+    app-network:
+        driver: bridge
